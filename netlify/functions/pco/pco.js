@@ -34,28 +34,26 @@ const handler = async function(event, context) {
       plansResponse.data[0].links.self + "/team_members"
     );
 
-    const res = teams.data
-      .filter(team => team.attributes.name.includes("Worship"))
-      .map(team => {
-        return {
-          id: team.id,
-          name: team.attributes.name,
-          positions: team.relationships.team_positions.data
-            .map(tp => {
-              const position = teams.included.find(pos => pos.id === tp.id);
-              const people = teamMembers.data.filter(
-                tm =>
-                  tm.attributes.team_position_name === position.attributes.name
-              );
-              return {
-                id: position.id,
-                name: position.attributes.name,
-                people: people.map(p => ({ id: p.id, ...p.attributes }))
-              };
-            })
-            .filter(tp => tp.people.length)
-        };
-      });
+    const res = teams.data.map(team => {
+      return {
+        id: team.id,
+        name: team.attributes.name,
+        positions: team.relationships.team_positions.data
+          .map(tp => {
+            const position = teams.included.find(pos => pos.id === tp.id);
+            const people = teamMembers.data.filter(
+              tm =>
+                tm.attributes.team_position_name === position.attributes.name
+            );
+            return {
+              id: position.id,
+              name: position.attributes.name,
+              people: people.map(p => ({ id: p.id, ...p.attributes }))
+            };
+          })
+          .filter(tp => tp.people.length)
+      };
+    });
 
     return {
       statusCode: 200,
