@@ -1,26 +1,35 @@
 <template>
-  <main class="p-5">
-    <h1 class="text-5xl font-bold mb-10">Teams söndag</h1>
-    <section>
-      <div v-for="team in teams" class="mb-6" :key="team.id">
-        <h2 class="text-lg font-semibold mb-2">{{ team.name }}</h2>
-        <ul>
-          <li v-for="position in team.positions" :key="position.id">
-            {{ position.name }}
-            <span
-              v-for="person in position.people"
-              :class="
-                person.status === 'C' ? 'text-green-500' : 'text-yellow-500'
-              "
-              :key="person.id"
-            >
-              {{ person.name }}
-            </span>
-          </li>
-        </ul>
-      </div>
-    </section>
-  </main>
+  <table class="border-collapse text-xs m-4">
+    <thead>
+      <tr class="text-left">
+        <th class="p-1">Team</th>
+        <th class="p-1">Norra AM</th>
+        <th class="p-1">City AM</th>
+        <th class="p-1">City PM</th>
+      </tr>
+    </thead>
+    <tbody>
+      <template v-for="(team, teamName) in teams">
+        <tr class="font-bold bg-black text-white">
+          <td colspan="4" class="p-1">{{ teamName }}</td>
+        </tr>
+        <tr v-for="teamMembers in team">
+          <td class="p-1">{{ teamMembers.find(t => t).team_position_name }}</td>
+          <td
+            v-for="teamMember in teamMembers"
+            class="p-1"
+            :class="{
+              'bg-yellow-200': !teamMember,
+              'bg-red-200': teamMember && teamMember.status === 'D'
+            }"
+          >
+            <span v-if="teamMember">{{ teamMember.name }}</span>
+            <span v-else>N/A</span>
+          </td>
+        </tr>
+      </template>
+    </tbody>
+  </table>
 </template>
 
 <script>
@@ -28,22 +37,48 @@ import axios from "axios";
 export default {
   data() {
     return {
-      serviceType: null,
-      positions: null,
-      teams: null
+      teams: []
     };
   },
-  async mounted() {
-    const services = {
-      cityPm: "1155898",
-      cityAm: "1155896"
-    };
+  async created() {
+    const pcoResponse = await axios.get("/.netlify/functions/pco");
+    const formattedTeams = pcoResponse.data.serviceTypes.reduce(
+      (acc, serviceType) => {
+        for (const team of serviceType.teams) {
+          const teamPositions = team.team_positions.map(tp => tp.name);
 
-    const pcoResponse = await axios.get(
-      `/.netlify/functions/pco?serviceTypeId=${services.cityPm}`
+          if (acc[team.name]) {
+            // proposal feature, should be replaced
+            acc[team.name].addAll(...teamPositions);
+          } else {
+            acc[team.name] = new Set(teamPositions);
+          }
+        }
+        return acc;
+      },
+      {}
     );
 
-    this.teams = pcoResponse.data;
+    this.teams = Object.entries(formattedTeams).reduce((acc, [k, team]) => {
+      acc[k] = Array.from(team)
+        .map(teamMember => {
+          return pcoResponse.data.serviceTypes.map(st => {
+            return this.getPersonByPosition(teamMember, st.teamMembers);
+          });
+        })
+        .filter(serviceTypePositions => {
+          return serviceTypePositions.some(teamMember => teamMember);
+        });
+      return acc;
+    }, {});
+  },
+  methods: {
+    getPersonByPosition(position, tm) {
+      return (
+        tm.data.find(tm => tm.attributes.team_position_name === position)
+          ?.attributes || null
+      );
+    }
   }
 };
 </script>

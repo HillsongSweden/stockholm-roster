@@ -10,54 +10,68 @@ const httpClient = axios.create({
 
 httpClient.interceptors.response.use(response => response.data);
 
+async function getRosterByServiceType(serviceTypeId) {
+  const [plans, teams] = await Promise.all([
+    httpClient.get(`/service_types/${serviceTypeId}/plans`, {
+      params: {
+        filter: "future",
+        per_page: 1
+      }
+    }),
+    httpClient.get(`/service_types/${serviceTypeId}/teams`, {
+      params: {
+        include: "team_positions"
+      }
+    })
+  ]);
+  const teamMembers = await httpClient.get(
+    plans.data[0].links.self + "/team_members"
+  );
+
+  return {
+    teamMembers,
+    plan: plans[0],
+    teams
+  };
+}
+
 const handler = async function(event, context) {
   try {
-    const plansResponse = await httpClient.get(
-      `/service_types/${event.queryStringParameters.serviceTypeId}/plans`,
-      {
-        params: {
-          filter: "future",
-          per_page: 1
-        }
-      }
+    const services = {
+      norraAm: "1134523",
+      cityAm: "1155896",
+      cityPm: "1155898"
+    };
+    const response = await Promise.all(
+      Object.values(services).map(getRosterByServiceType)
     );
-
-    const teams = await httpClient.get(
-      `/service_types/${event.queryStringParameters.serviceTypeId}/teams`,
-      {
-        params: {
-          include: "team_positions"
-        }
-      }
-    );
-    const teamMembers = await httpClient.get(
-      plansResponse.data[0].links.self + "/team_members"
-    );
-
-    const res = teams.data.map(team => {
-      return {
-        id: team.id,
-        name: team.attributes.name,
-        positions: team.relationships.team_positions.data
-          .map(tp => {
-            const position = teams.included.find(pos => pos.id === tp.id);
-            const people = teamMembers.data.filter(
-              tm =>
-                tm.attributes.team_position_name === position.attributes.name
-            );
-            return {
-              id: position.id,
-              name: position.attributes.name,
-              people: people.map(p => ({ id: p.id, ...p.attributes }))
-            };
-          })
-          .filter(tp => tp.people.length)
-      };
-    });
 
     return {
       statusCode: 200,
-      body: JSON.stringify(res)
+      body: JSON.stringify({
+        serviceTypes: response.map(serviceType => {
+          return {
+            teamMembers: serviceType.teamMembers,
+            teams: serviceType.teams.data.map(team => {
+              return {
+                id: team.id,
+                name: team.attributes.name,
+                team_positions: team.relationships.team_positions.data.map(
+                  teamPosition => {
+                    const foundRelatedPosition = serviceType.teams.included.find(
+                      relatedPosition => relatedPosition.id === teamPosition.id
+                    );
+                    return {
+                      id: foundRelatedPosition.id,
+                      name: foundRelatedPosition.attributes.name
+                    };
+                  }
+                )
+              };
+            })
+          };
+        })
+      })
     };
   } catch (error) {
     console.log(error);
