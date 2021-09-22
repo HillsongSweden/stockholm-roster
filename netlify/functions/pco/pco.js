@@ -27,11 +27,21 @@ async function getRosterByServiceType(serviceTypeId) {
   const teamMembers = await httpClient.get(
     plans.data[0].links.self + "/team_members"
   );
+  const neededPositions = await httpClient.get(
+    plans.data[0].links.self + "/needed_positions"
+  );
 
   return {
     teamMembers,
+    neededPositions: neededPositions.data,
     plan: plans[0],
-    teams
+    teams: {
+      ...teams,
+      included: teams.included.reduce((acc, inc) => {
+        acc[inc.type] = { ...acc[inc.type], [inc.id]: inc.attributes };
+        return acc;
+      }, {})
+    }
   };
 }
 
@@ -51,20 +61,27 @@ const handler = async function(event, context) {
       body: JSON.stringify({
         serviceTypes: response.map(serviceType => {
           return {
-            teamMembers: serviceType.teamMembers,
+            neededPositions: serviceType.neededPositions.reduce((acc, pos) => {
+              acc[pos.attributes.team_position_name] = pos.attributes;
+              return acc;
+            }, {}),
+            teamMembers: serviceType.teamMembers.data.reduce(
+              (acc, teamMember) => {
+                acc[teamMember.attributes.team_position_name] =
+                  teamMember.attributes;
+                return acc;
+              },
+              {}
+            ),
             teams: serviceType.teams.data.map(team => {
               return {
                 id: team.id,
                 name: team.attributes.name,
-                team_positions: team.relationships.team_positions.data.map(
+                teamPositions: team.relationships.team_positions.data.map(
                   teamPosition => {
-                    const foundRelatedPosition = serviceType.teams.included.find(
-                      relatedPosition => relatedPosition.id === teamPosition.id
-                    );
-                    return {
-                      id: foundRelatedPosition.id,
-                      name: foundRelatedPosition.attributes.name
-                    };
+                    const foundRelatedPosition =
+                      serviceType.teams.included.TeamPosition[teamPosition.id];
+                    return foundRelatedPosition.name;
                   }
                 )
               };
