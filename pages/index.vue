@@ -45,7 +45,7 @@ import axios from "axios";
 export default {
   data() {
     return {
-      teams: [],
+      teams: {},
       date: ""
     };
   },
@@ -94,7 +94,6 @@ export default {
       },
       {}
     );
-    console.log(this.teams);
   }
 };
 </script>
