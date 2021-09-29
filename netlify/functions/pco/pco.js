@@ -34,7 +34,7 @@ async function getRosterByServiceType(serviceTypeId) {
   return {
     teamMembers,
     neededPositions: neededPositions.data,
-    plan: plans[0],
+    plan: plans.data[0],
     teams: {
       ...teams,
       included: teams.included.reduce((acc, inc) => {
@@ -59,6 +59,7 @@ const handler = async function(event, context) {
     return {
       statusCode: 200,
       body: JSON.stringify({
+        date: response[0].plan.attributes.short_dates,
         serviceTypes: response.map(serviceType => {
           return {
             neededPositions: serviceType.neededPositions.reduce((acc, pos) => {
