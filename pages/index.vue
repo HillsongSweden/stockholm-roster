@@ -1,7 +1,7 @@
 <template>
   <div class="p-4">
-    <h1 class="text-xl font-black mb-4">{{ date }}</h1>
-    <table class="border-collapse text-xs">
+    <h1 class="text-xl font-black mb-4">{{ date || "Laddar..." }}</h1>
+    <table class="border-collapse text-xs" v-if="teams">
       <thead>
         <tr class="text-left">
           <th class="p-1">Team</th>
@@ -45,7 +45,7 @@ import axios from "axios";
 export default {
   data() {
     return {
-      teams: {},
+      teams: null,
       date: ""
     };
   },
