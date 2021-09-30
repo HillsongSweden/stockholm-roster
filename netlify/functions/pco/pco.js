@@ -10,12 +10,13 @@ const httpClient = axios.create({
 
 httpClient.interceptors.response.use(response => response.data);
 
-async function getRosterByServiceType(serviceTypeId) {
+async function getRosterByServiceType(serviceTypeId, opts = {}) {
   const [plans, teams] = await Promise.all([
     httpClient.get(`/service_types/${serviceTypeId}/plans`, {
       params: {
         filter: "future",
-        per_page: 1
+        per_page: 1,
+        offset: opts.offset
       }
     }),
     httpClient.get(`/service_types/${serviceTypeId}/teams`, {
@@ -53,7 +54,9 @@ const handler = async function(event, context) {
       cityPm: "1155898"
     };
     const response = await Promise.all(
-      Object.values(services).map(getRosterByServiceType)
+      Object.values(services).map(serviceTypeId =>
+        getRosterByServiceType(serviceTypeId, event.queryStringParameters)
+      )
     );
 
     return {
