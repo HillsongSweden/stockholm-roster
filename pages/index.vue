@@ -7,9 +7,9 @@
     <main v-if="teams">
       <section class="space-x-2 text-sm">
         <button
-          v-if="$route.query.offset"
+          :disabled="!$route.query.offset"
           @click="fetchThisSunday"
-          class="bg-blue-800 text-white py-1 px-2 rounded-md shadow-md mb-4 cursor-pointer transition duration-200 hover:bg-blue-900"
+          class="bg-blue-800 text-white py-1 px-2 rounded-md shadow-md mb-4 cursor-pointer transition duration-200 hover:bg-blue-900 disabled:opacity-50"
         >
           This sunday
         </button>
@@ -35,12 +35,12 @@
               <td colspan="4" class="p-1">{{ teamName }}</td>
             </tr>
             <tr v-for="teamMembers in team">
-              <td class="p-1">
+              <td class="p-1 border-b border-solid border-gray-200">
                 {{ teamMembers.find(t => t).team_position_name }}
               </td>
               <td
                 v-for="teamMember in teamMembers"
-                class="p-1"
+                class="p-1 border-solid border-gray-200 border-b"
                 :class="{
                   'bg-yellow-200': !teamMember,
                   'bg-red-200':
