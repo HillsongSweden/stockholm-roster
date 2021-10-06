@@ -26,12 +26,11 @@ async function getRosterByServiceType(serviceTypeId, opts = {}) {
       }
     })
   ]);
-  const teamMembers = await httpClient.get(
-    plans.data[0].links.self + "/team_members"
-  );
-  const neededPositions = await httpClient.get(
-    plans.data[0].links.self + "/needed_positions"
-  );
+
+  const [teamMembers, neededPositions] = await Promise.all([
+    httpClient.get(plans.data[0].links.self + "/team_members"),
+    httpClient.get(plans.data[0].links.self + "/needed_positions")
+  ]);
 
   return {
     teamMembers,
