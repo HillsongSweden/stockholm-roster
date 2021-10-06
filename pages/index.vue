@@ -38,7 +38,10 @@
             <tr class="font-bold text-white bg-black" :key="teamName">
               <td colspan="4" class="p-1">{{ teamName }}</td>
             </tr>
-            <tr v-for="(teamMembers, positionName) in team" :key="positionName">
+            <tr
+              v-for="(teamMembers, positionName) in team"
+              :key="teamName + '_' + positionName"
+            >
               <td class="p-1 border-b border-gray-200 border-solid">
                 {{ teamMembers.find(t => t).team_position_name }}
               </td>
