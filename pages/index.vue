@@ -1,6 +1,6 @@
 <template>
   <div class="p-4">
-    <h1 class="text-xl font-black mb-4">
+    <h1 class="mb-4 text-xl font-black">
       <span v-if="isLoading">Loading roster...</span>
       <span v-else>{{ date }}</span>
     </h1>
@@ -9,38 +9,43 @@
         <button
           :disabled="!$route.query.offset"
           @click="fetchThisSunday"
-          class="bg-blue-800 text-white py-1 px-2 rounded-md shadow-md mb-4 cursor-pointer transition duration-200 hover:bg-blue-900 disabled:opacity-50"
+          class="px-2 py-1 mb-4 text-white transition duration-200 bg-blue-800 rounded-md shadow-md cursor-pointer hover:bg-blue-900 disabled:opacity-50"
         >
           This sunday
         </button>
         <button
           @click="fetchNextSunday"
-          class="bg-blue-800 text-white py-1 px-2 rounded-md shadow-md mb-4 cursor-pointer transition duration-200 hover:bg-blue-900"
+          class="px-2 py-1 mb-4 text-white transition duration-200 bg-blue-800 rounded-md shadow-md cursor-pointer hover:bg-blue-900"
         >
           Next sunday
         </button>
       </section>
-      <table class="border-collapse text-xs" v-if="teams && !isLoading">
+      <table class="text-xs border-collapse" v-if="teams && !isLoading">
         <thead>
           <tr class="text-left">
             <th class="p-1">Team</th>
-            <th class="p-1">Norra AM</th>
-            <th class="p-1">City AM</th>
-            <th class="p-1">City PM</th>
+            <th
+              class="p-1"
+              v-for="serviceTypeName in serviceTypeNames"
+              :key="serviceTypeName"
+            >
+              {{ serviceTypeName }}
+            </th>
           </tr>
         </thead>
         <tbody>
           <template v-for="(team, teamName) in teams">
-            <tr class="font-bold bg-black text-white">
+            <tr class="font-bold text-white bg-black" :key="teamName">
               <td colspan="4" class="p-1">{{ teamName }}</td>
             </tr>
-            <tr v-for="teamMembers in team">
-              <td class="p-1 border-b border-solid border-gray-200">
+            <tr v-for="(teamMembers, positionName) in team" :key="positionName">
+              <td class="p-1 border-b border-gray-200 border-solid">
                 {{ teamMembers.find(t => t).team_position_name }}
               </td>
               <td
-                v-for="teamMember in teamMembers"
-                class="p-1 border-solid border-gray-200 border-b"
+                v-for="(teamMember, index) in teamMembers"
+                :key="index"
+                class="p-1 border-b border-gray-200 border-solid"
                 :class="{
                   'bg-yellow-200': !teamMember,
                   'bg-red-200':
@@ -67,6 +72,7 @@ export default {
     return {
       teams: null,
       date: "",
+      serviceTypeNames: [],
       isLoading: false
     };
   },
@@ -86,49 +92,10 @@ export default {
         params: this.$route.query
       });
       this.isLoading = false;
+
       this.date = pcoResponse.data.date;
-
-      const formattedTeams = pcoResponse.data.serviceTypes.reduce(
-        (acc, serviceType) => {
-          for (const team of serviceType.teams) {
-            const teamPositions = team.teamPositions;
-
-            if (acc[team.name]) {
-              // proposal feature, should be replaced
-              acc[team.name].addAll(...teamPositions);
-            } else {
-              acc[team.name] = new Set(teamPositions);
-            }
-          }
-          return acc;
-        },
-        {}
-      );
-
-      this.teams = Object.entries(formattedTeams).reduce(
-        (acc, [teamName, team]) => {
-          acc[teamName] = Array.from(team)
-            .map(position => {
-              return pcoResponse.data.serviceTypes.map(st => {
-                if (st.neededPositions[position])
-                  return {
-                    name: "TBC",
-                    team_position_name: position,
-                    status: "TBC"
-                  };
-                return st.teamMembers[position] || null;
-              });
-            })
-            .filter(serviceTypePositions => {
-              return serviceTypePositions.some(
-                teamMemberExists => teamMemberExists
-              );
-            });
-
-          return acc;
-        },
-        {}
-      );
+      this.teams = pcoResponse.data.teams;
+      this.serviceTypeNames = pcoResponse.data.serviceTypeNames;
     }
   },
   watch: {
