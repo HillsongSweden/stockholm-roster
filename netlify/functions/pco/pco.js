@@ -48,15 +48,23 @@ async function getRosterByServiceType(serviceTypeId, opts = {}) {
 }
 
 const handler = async function(event) {
+	const servicesMap = {
+		norraam: "1134523",
+		cityam: "1155896",
+		citypm: "1155898"
+	};
+
   try {
-    const services = {
-      norraAm: "1134523",
-      cityAm: "1155896",
-      cityPm: "1155898"
-    };
+		const servicesFilter = event.queryStringParameters.services?.split(',').map(service => service.toLowerCase())
+		let services = Object.values(servicesMap)
+		if (servicesFilter) {
+			services = servicesFilter.map(filter => {
+				return servicesMap[filter]
+			})
+		}
 
     const response = await Promise.all(
-      Object.values(services).map(serviceTypeId =>
+      services.map(serviceTypeId =>
         getRosterByServiceType(serviceTypeId, event.queryStringParameters)
       )
     );
@@ -78,7 +86,14 @@ const handler = async function(event) {
           )
         });
 
-        serviceType.teams.data.forEach(team => {
+				const teamsFilter = event.queryStringParameters.teams?.split(',').map(team => team.toLowerCase())
+        serviceType.teams.data.filter(team => {
+					if (!teamsFilter) {
+						return true
+					}
+
+					return teamsFilter.includes(team.attributes.name.toLowerCase())
+				}).forEach(team => {
           const teamName = team.attributes.name;
           const oldTeamPositions = acc.teams[teamName] || [];
           const newTeamPositions = team.relationships.team_positions.data.map(
@@ -129,10 +144,9 @@ const handler = async function(event) {
       })
     };
   } catch (error) {
-    console.log(error);
+    console.log(error.response.data);
     return {
       statusCode: 500,
-      body: JSON.stringify({ msg: error.message })
     };
   }
 };
