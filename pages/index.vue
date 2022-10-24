@@ -30,29 +30,32 @@
           </tr>
         </thead>
         <tbody>
-          <template v-for="(team, teamName) in teams">
-            <tr class="font-bold text-white bg-black" :key="teamName">
-              <table-cell colspan="4">{{ teamName }}</table-cell>
+          <template v-for="team in teams">
+            <tr class="font-bold text-white uppercase bg-black">
+              <table-cell colspan="4">{{ team.teamName }}</table-cell>
             </tr>
             <tr
-              v-for="(teamMembers, positionName) in team"
-              :key="teamName + '_' + positionName"
+              v-for="teamPosition in team.teamPositions"
+              :key="team.teamName + '_' + teamPosition.positionName"
             >
-              <table-cell>
-                {{ teamMembers.find((t) => t).team_position_name }}
+              <table-cell class="uppercase">
+                {{ teamPosition.positionName }}
               </table-cell>
               <table-cell
-                v-for="(teamMember, index) in teamMembers"
+                v-for="(people, index) in teamPosition.roster"
                 :key="index"
-                :class="{
-                  'bg-yellow-200': !teamMember,
-                  'bg-red-200':
-                    teamMember && ['D', 'TBC'].includes(teamMember.status),
-                  'text-yellow-400 italic':
-                    teamMember && teamMember.status === 'U',
-                }"
-              >
-                <span v-if="teamMember">{{ teamMember.name }}</span>
+								:class="{' bg-yellow-200': !people.length }"
+								>
+                <span v-if="people.length" class="space-y-1">
+									<div
+										v-for="person in people"
+										:class="{
+											'text-red-400 italic line-through': person.status === 'D',
+											'text-yellow-400 italic': person.status === 'U',
+										}">
+										<img :src="person.photo_thumbnail" class="hidden w-6 h-6 border-2 rounded-full shadow-lg md:inline" :class="{ 'border-red-400': person.status === 'D', 'border-green-400': person.status === 'C' }"> {{ person.name }}
+									</div>
+								</span>
                 <span v-else>N/A</span>
               </table-cell>
             </tr>
