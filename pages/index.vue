@@ -17,41 +17,45 @@
           Next sunday
         </btn>
       </section>
-      <table class="text-xs border-collapse">
-        <thead>
-          <tr class="text-left uppercase">
-            <table-header>Team</table-header>
-            <table-header
-              v-for="serviceTypeName in serviceTypeNames"
-              :key="serviceTypeName"
-            >
-              {{ serviceTypeName }}
-            </table-header>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="team in teams">
-            <tr class="font-bold text-white uppercase bg-black">
-              <table-cell colspan="4">{{ team.teamName }}</table-cell>
-            </tr>
-            <tr
-              v-for="teamPosition in team.teamPositions"
-              :key="team.teamName + '_' + teamPosition.positionName"
-            >
-              <table-cell class="uppercase">
-                {{ teamPosition.positionName }}
-              </table-cell>
-              <table-cell
-                v-for="(people, index) in teamPosition.roster"
-                :key="index"
-								:class="{' bg-yellow-100': !people.length }"
-							>
-								<people :people="people" />
-              </table-cell>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+      <section class="flex space-x-4">
+				<div v-for="(t, i) in teams" :key="i + 'y'">
+					<table class="text-xs border-collapse">
+						<thead>
+							<tr class="text-left uppercase">
+								<table-header>Team</table-header>
+								<table-header
+									v-for="serviceTypeName in ['a', 'b', 'c']"
+									:key="serviceTypeName"
+								>
+									{{ serviceTypeName }}
+								</table-header>
+							</tr>
+						</thead>
+						<tbody>
+							<template v-for="team in t">
+								<tr class="font-bold text-white uppercase bg-black">
+									<table-cell colspan="4">{{ team.teamName }}</table-cell>
+								</tr>
+								<tr
+									v-for="teamPosition in team.teamPositions"
+									:key="team.teamName + '_' + teamPosition.positionName"
+								>
+									<table-cell class="uppercase">
+										{{ teamPosition.positionName }}
+									</table-cell>
+									<table-cell
+										v-for="(people, index) in teamPosition.roster"
+										:key="index"
+										:class="{' bg-yellow-100': !people.length }"
+									>
+										<people :people="people" />
+									</table-cell>
+								</tr>
+							</template>
+						</tbody>
+					</table>
+				</div>
+			</section>
     </main>
   </div>
 </template>

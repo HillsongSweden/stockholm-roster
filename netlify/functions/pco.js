@@ -59,13 +59,14 @@ exports.handler = async (event) => {
 		services = Object.values(servicesMap)
 	}
 
+	const x = await Promise.all([0, 1, 2].map(async offset => {
 	let serviceTypes = []
 	if (process.env.USE_MOCK) {
 		serviceTypes = require('../../mockresponse.js')
 	} else {
 		serviceTypes = await Promise.all(
 			services.map(serviceTypeId =>
-				getRosterByServiceType(serviceTypeId, event.queryStringParameters)
+				getRosterByServiceType(serviceTypeId, { offset })
 			)
 		);
 	}
@@ -112,12 +113,14 @@ exports.handler = async (event) => {
 		}
 	}).sort((a, b) => b.teamName.localeCompare(a.teamName))
 
+	return output
+	}))
 	return {
 		statusCode: 200,
 		body: JSON.stringify({
-			date: serviceTypes[0].date,
-			teams: output,
-			serviceTypeNames: serviceTypes.map(st => st.serviceTypeName)
+			// date: serviceTypes[0].date,
+			teams: x,
+			// serviceTypeNames: serviceTypes.map(st => st.serviceTypeName)
 		})
 	}
 }

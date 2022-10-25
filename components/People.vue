@@ -10,9 +10,7 @@
 						'border-red-500': person.status === 'D',
 						'border-green-500': person.status === 'C',
 						'border-yellow-500': person.status === 'U',
-					 }"> {{
-					person.name
-					}}
+					 }"> {{ person.name }}
 			</div>
 		</span>
 		<span v-else class="italic">N/A</span>
