@@ -31,7 +31,12 @@ async function getRosterByServiceType(serviceTypeId, opts) {
 		})
 	]);
 
-	return { neededPositions: neededPositions.data, teamMembers: teamMembers.data, date: plans.data.data[0].attributes.short_dates, serviceTypeName: plans.data.included[0]?.attributes.name }
+	return {
+		neededPositions: neededPositions.data,
+		teamMembers: teamMembers.data,
+		date: plans.data.data[0].attributes.short_dates,
+		serviceTypeName: plans.data.included[0]?.attributes.name
+	}
 }
 
 exports.handler = async (event) => {
@@ -41,24 +46,29 @@ exports.handler = async (event) => {
 		citypm: "1155898"
 	};
 
-		const servicesFilter = event.queryStringParameters?.services?.split(',').map(service => service.toLowerCase())
-		let services = []
-		if (servicesFilter) {
-			for (const filter of servicesFilter) {
-				const validFilter = servicesMap[filter]
-				if (validFilter) {
-					services.push(validFilter)
-				}
+	const servicesFilter = event.queryStringParameters?.services?.split(',').map(service => service.toLowerCase())
+	let services = []
+	if (servicesFilter) {
+		for (const filter of servicesFilter) {
+			const validFilter = servicesMap[filter]
+			if (validFilter) {
+				services.push(validFilter)
 			}
-		} else {
-			services = Object.values(servicesMap)
 		}
+	} else {
+		services = Object.values(servicesMap)
+	}
 
-		const serviceTypes = await Promise.all(
+	let serviceTypes = []
+	if (process.env.USE_MOCK) {
+		serviceTypes = require('../../mockresponse.js')
+	} else {
+		serviceTypes = await Promise.all(
 			services.map(serviceTypeId =>
 				getRosterByServiceType(serviceTypeId, event.queryStringParameters)
 			)
 		);
+	}
 
 	const teams = {}
 	for (const serviceType of serviceTypes) {
@@ -100,8 +110,7 @@ exports.handler = async (event) => {
 			teamName,
 			teamPositions
 		}
-	}).sort((a,b) => a.teamName - b.teamName)
-
+	}).sort((a, b) => b.teamName.localeCompare(a.teamName))
 
 	return {
 		statusCode: 200,
