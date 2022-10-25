@@ -44,19 +44,9 @@
               <table-cell
                 v-for="(people, index) in teamPosition.roster"
                 :key="index"
-								:class="{' bg-yellow-200': !people.length }"
-								>
-                <span v-if="people.length" class="space-y-1">
-									<div
-										v-for="person in people"
-										:class="{
-											'text-red-400 italic line-through': person.status === 'D',
-											'text-yellow-400 italic': person.status === 'U',
-										}">
-										<img :src="person.photo_thumbnail" class="hidden w-6 h-6 border-2 rounded-full shadow-lg md:inline" :class="{ 'border-red-400': person.status === 'D', 'border-green-400': person.status === 'C' }"> {{ person.name }}
-									</div>
-								</span>
-                <span v-else>N/A</span>
+								:class="{' bg-yellow-100': !people.length }"
+							>
+								<people :people="people" />
               </table-cell>
             </tr>
           </template>
