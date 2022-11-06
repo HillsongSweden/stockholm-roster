@@ -21,12 +21,14 @@ async function getRosterByServiceType(serviceTypeId, opts) {
 	const [teamMembers, neededPositions] = await Promise.all([
 		httpClient.get(plans.data.data[0]?.links.self + "/team_members", {
 			params: {
-				include: 'team'
+				include: 'team',
+				per_page: 100
 			}
 		}),
 		httpClient.get(plans.data.data[0]?.links.self + "/needed_positions", {
 			params: {
-				include: 'team'
+				include: 'team',
+				per_page: 100
 			}
 		})
 	]);
